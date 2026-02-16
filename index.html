@@ -729,35 +729,32 @@
 
     // ===== NEW: Molecule text effect =====
     function makeMolecule(el){
-      // Если уже обработано, не трогаем
-      if (el.dataset.moleculeReady === '1') return;
-      el.dataset.moleculeReady = '1';
+  if (el.dataset.moleculeReady === '1') return;
+  el.dataset.moleculeReady = '1';
 
-      const text = el.textContent || '';
-      el.textContent = '';
+  const text = el.textContent || '';
+  el.innerHTML = '';
 
-      const frag = document.createDocumentFragment();
-      for (const ch of text) {
-        const s = document.createElement('span');
-        s.className = 'ch';
-        s.textContent = ch;
+  const frag = document.createDocumentFragment();
+  for (const ch of text) {
+    const s = document.createElement('span');
+    s.className = 'ch';
+    s.textContent = ch === ' ' ? '\u00A0' : ch;
 
-        // Вектор "распада"
-        const dx = (Math.random() * 2 - 1).toFixed(3);
-        const dy = (Math.random() * 2 - 1).toFixed(3);
-        const dr = (Math.random() * 2 - 1).toFixed(3);
+    const dx = (Math.random() * 2 - 1).toFixed(3);
+    const dy = (Math.random() * 2 - 1).toFixed(3);
+    const dr = (Math.random() * 2 - 1).toFixed(3);
 
-        s.style.setProperty('--dx', dx);
-        s.style.setProperty('--dy', dy);
-        s.style.setProperty('--dr', dr);
+    s.style.setProperty('--dx', dx);
+    s.style.setProperty('--dy', dy);
+    s.style.setProperty('--dr', dr);
 
-        frag.appendChild(s);
-      }
+    frag.appendChild(s);
+  }
 
-      el.classList.add('molecule');
-      el.appendChild(frag);
-    }
-
+  el.classList.add('molecule');
+  el.appendChild(frag);
+}
     // Не делаем молекулы при reduced-motion (там и так без лишнего)
     if (!prefersReduced) {
       document.querySelectorAll('[data-molecule]').forEach(makeMolecule);
@@ -819,3 +816,4 @@
   </script>
 </body>
 </html>
+
