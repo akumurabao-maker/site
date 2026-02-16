@@ -1,10 +1,11 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Anastasia Dzhera Love • Brand Managers Studio</title>
   <meta name="description" content="Красивая промо-страница про бренд-менеджеров. Плавные анимации, плавающие элементы, чистый HTML/CSS/JS." />
+
   <style>
     :root{
       --bg0:#070912;
@@ -22,6 +23,12 @@
 
       --shadow: 0 20px 60px rgba(0,0,0,.55);
       --radius: 18px;
+
+      --tilt-persp: 900px;
+      --tilt-rx: 8deg;
+      --tilt-ry: 10deg;
+
+      --mol-spread: 14px;
     }
 
     *{box-sizing:border-box}
@@ -93,6 +100,15 @@
     .blob.two{background: radial-gradient(circle at 30% 30%, rgba(6,182,212,.9), transparent 60%)}
     .blob.three{background: radial-gradient(circle at 30% 30%, rgba(249,115,22,.85), transparent 60%)}
 
+    /* Subtle noise */
+    .noise{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      opacity:.06;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+      background-size: 220px 220px;
+      mix-blend-mode: overlay;
+    }
+
     /* Hero */
     main{position:relative; z-index:1}
     .hero{
@@ -139,6 +155,7 @@
       background: linear-gradient(135deg, var(--a), var(--b));
       box-shadow: 0 0 0 3px rgba(124,58,237,.14);
     }
+
     h1{
       margin:0 0 10px;
       font-size: 44px;
@@ -202,6 +219,8 @@
       border-radius: var(--radius);
       padding: 16px;
       box-shadow: 0 12px 34px rgba(0,0,0,.38);
+      position:relative;
+      overflow:hidden;
     }
     .kpi{
       font-size: 12px; color: var(--muted2);
@@ -236,8 +255,13 @@
       background: rgba(255,255,255,.05);
       color: var(--muted);
       white-space:nowrap;
+      user-select:none;
     }
-    .sig{margin-top:10px; color: rgba(255,255,255,.78); font-weight:700}
+    .sig{
+      margin-top:10px;
+      color: rgba(255,255,255,.78);
+      font-weight:700;
+    }
 
     /* Sections */
     section{padding: 18px 0 62px}
@@ -302,16 +326,71 @@
       transform: translateY(0);
     }
 
-    /* Subtle noise */
-    .noise{
-      position:fixed; inset:0; z-index:0; pointer-events:none;
-      opacity:.06;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
-      background-size: 220px 220px;
-      mix-blend-mode: overlay;
+    /* ======== NEW: Tilt + glossy highlight ======== */
+    .tilt{
+      transform-style: preserve-3d;
+      will-change: transform;
+    }
+    .tilt::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius: inherit;
+      background: radial-gradient(520px 260px at var(--mx,50%) var(--my,50%),
+        rgba(255,255,255,.18), transparent 58%);
+      opacity:0;
+      transition: opacity .2s ease;
+      pointer-events:none;
+    }
+    .tilt:hover::after{ opacity:1; }
+
+    /* ======== NEW: Molecule text effect ======== */
+    .molecule{
+      display:inline-block;
+      position:relative;
+      cursor:default;
+      --spread: var(--mol-spread);
+    }
+    .molecule .ch{
+      display:inline-block;
+      will-change: transform, opacity, filter;
+      transition:
+        transform .45s cubic-bezier(.2,.8,.2,1),
+        opacity .45s ease,
+        filter .45s ease;
+    }
+    .molecule:hover .ch{
+      transform:
+        translate(calc(var(--dx) * var(--spread)),
+                  calc(var(--dy) * var(--spread)))
+        rotate(calc(var(--dr) * 22deg));
+      filter: blur(.4px);
+      opacity:.92;
+    }
+
+    /* ======== NEW: Particle burst ======== */
+    .particle{
+      position: fixed;
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      pointer-events:none;
+      z-index: 9999;
+      background: rgba(255,255,255,.85);
+      box-shadow: 0 0 18px rgba(124,58,237,.35);
+    }
+
+    /* Reduced motion: be nice to people who hate motion */
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      .reveal{transition:none; opacity:1; transform:none}
+      .blob{display:none}
+      .tilt{transform:none !important}
+      .tilt::after{display:none}
+      .molecule .ch{transition:none}
+      .molecule:hover .ch{transform:none; filter:none}
     }
   </style>
 </head>
+
 <body>
   <div class="bgfx" aria-hidden="true">
     <div class="blob one" id="blob1"></div>
@@ -325,10 +404,11 @@
       <a class="brand" href="#top" aria-label="На главную">
         <div class="logo" aria-hidden="true"></div>
         <div>
-          <b>Anastasia Dzhera Love</b>
-          <span>brand managers are built different</span>
+          <b data-molecule>Anastasia Dzhera Love</b>
+          <span data-molecule>brand managers are built different</span>
         </div>
       </a>
+
       <nav class="links" aria-label="Навигация">
         <a href="#about">О нас</a>
         <a href="#power">Почему они крутые</a>
@@ -348,9 +428,10 @@
             <div class="pill">⚡️ Быстро. Чётко. Со вкусом.</div>
           </div>
 
+          <!-- ВАЖНО: molecule делаем на обёртке, чтобы <br> не ломался -->
           <h1>
-            Мы делаем так, чтобы бренд<br/>
-            выглядел дороже, чем был вчера.
+            <span data-molecule>Мы делаем так, чтобы бренд</span><br/>
+            <span data-molecule>выглядел дороже, чем был вчера.</span>
           </h1>
 
           <p class="sub">
@@ -376,16 +457,19 @@
             <div class="big">24/7</div>
             <p class="small">Проблемы бренда не выбирают расписание. Мы тоже.</p>
           </div>
+
           <div class="card reveal">
             <div class="kpi">Толерантность к хаосу</div>
             <div class="big">∞</div>
             <p class="small">Когда “всё горит”, бренд-менеджер просто открывает план.</p>
           </div>
+
           <div class="card reveal">
             <div class="kpi">Стиль</div>
             <div class="big">S-Tier</div>
             <p class="small">Потому что вкус, логика и дисциплина ходят вместе.</p>
           </div>
+
           <div class="card reveal">
             <div class="kpi">Смысл</div>
             <div class="big">ROI</div>
@@ -398,12 +482,14 @@
             <div class="badge">Манифест</div>
             <div class="badge">без лишней шелухи</div>
           </div>
+
           <p class="small" style="margin-top:10px">
             Бренд-менеджер это человек, который умеет говорить “нет” хаосу,
             “да” данным, и “пожалуйста” аудитории. А потом всё равно делает по-своему,
             потому что знает, как лучше.
           </p>
-          <div class="sig">Anastasia Dzhera Love</div>
+
+          <div class="sig" data-molecule>Anastasia Dzhera Love</div>
         </div>
       </aside>
     </div>
@@ -534,7 +620,9 @@
   </main>
 
   <script>
-    // Floating blobs animation (mouse + time)
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ===== Floating blobs animation (mouse + time) =====
     const b1 = document.getElementById('blob1');
     const b2 = document.getElementById('blob2');
     const b3 = document.getElementById('blob3');
@@ -562,28 +650,30 @@
     placeInitial();
     window.addEventListener('resize', placeInitial, { passive:true });
 
-    const start = performance.now();
-    function tick(t) {
-      const s = (t - start) / 1000;
+    if (!prefersReduced) {
+      const start = performance.now();
+      function tick(t) {
+        const s = (t - start) / 1000;
 
-      const p1x = Math.sin(s * 0.60) * 26 + mx * 0.55;
-      const p1y = Math.cos(s * 0.55) * 22 + my * 0.50;
+        const p1x = Math.sin(s * 0.60) * 26 + mx * 0.55;
+        const p1y = Math.cos(s * 0.55) * 22 + my * 0.50;
 
-      const p2x = Math.cos(s * 0.50) * 28 + mx * 0.35;
-      const p2y = Math.sin(s * 0.65) * 24 + my * 0.30;
+        const p2x = Math.cos(s * 0.50) * 28 + mx * 0.35;
+        const p2y = Math.sin(s * 0.65) * 24 + my * 0.30;
 
-      const p3x = Math.sin(s * 0.45 + 1.7) * 30 + mx * 0.25;
-      const p3y = Math.cos(s * 0.58 + 1.1) * 26 + my * 0.22;
+        const p3x = Math.sin(s * 0.45 + 1.7) * 30 + mx * 0.25;
+        const p3y = Math.cos(s * 0.58 + 1.1) * 26 + my * 0.22;
 
-      b1.style.transform = `translate3d(${p1x}px, ${p1y}px, 0)`;
-      b2.style.transform = `translate3d(${p2x}px, ${p2y}px, 0)`;
-      b3.style.transform = `translate3d(${p3x}px, ${p3y}px, 0)`;
+        b1.style.transform = `translate3d(${p1x}px, ${p1y}px, 0)`;
+        b2.style.transform = `translate3d(${p2x}px, ${p2y}px, 0)`;
+        b3.style.transform = `translate3d(${p3x}px, ${p3y}px, 0)`;
 
+        requestAnimationFrame(tick);
+      }
       requestAnimationFrame(tick);
     }
-    requestAnimationFrame(tick);
 
-    // Reveal on scroll
+    // ===== Reveal on scroll =====
     const io = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) e.target.classList.add('in');
@@ -592,16 +682,139 @@
 
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-    // Year
+    // ===== Year =====
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // "Command palette" joke: Cmd+K scrolls to about section
+    // ===== "Command palette" joke: Cmd/Ctrl+K scrolls to about =====
     window.addEventListener('keydown', (e) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === 'k');
       if (isCmdK) {
         e.preventDefault();
         document.querySelector('#about').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    });
+
+    // ===== NEW: Tilt + glossy highlight =====
+    if (!prefersReduced) {
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+      document.querySelectorAll('.card, .hcard').forEach(el => {
+        el.classList.add('tilt');
+
+        el.addEventListener('mousemove', (e) => {
+          const r = el.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;   // 0..1
+          const py = (e.clientY - r.top) / r.height;   // 0..1
+
+          const rx = (py - 0.5) * -8; // rotateX
+          const ry = (px - 0.5) * 10; // rotateY
+
+          const rrX = clamp(rx, -10, 10);
+          const rrY = clamp(ry, -12, 12);
+
+          el.style.transform =
+            `perspective(var(--tilt-persp)) rotateX(${rrX}deg) rotateY(${rrY}deg) translateY(-2px)`;
+
+          el.style.setProperty('--mx', (px*100).toFixed(1) + '%');
+          el.style.setProperty('--my', (py*100).toFixed(1) + '%');
+        });
+
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = '';
+          el.style.removeProperty('--mx');
+          el.style.removeProperty('--my');
+        });
+      });
+    }
+
+    // ===== NEW: Molecule text effect =====
+    function makeMolecule(el){
+      // Если уже обработано, не трогаем
+      if (el.dataset.moleculeReady === '1') return;
+      el.dataset.moleculeReady = '1';
+
+      const text = el.textContent || '';
+      el.textContent = '';
+
+      const frag = document.createDocumentFragment();
+      for (const ch of text) {
+        const s = document.createElement('span');
+        s.className = 'ch';
+        s.textContent = ch;
+
+        // Вектор "распада"
+        const dx = (Math.random() * 2 - 1).toFixed(3);
+        const dy = (Math.random() * 2 - 1).toFixed(3);
+        const dr = (Math.random() * 2 - 1).toFixed(3);
+
+        s.style.setProperty('--dx', dx);
+        s.style.setProperty('--dy', dy);
+        s.style.setProperty('--dr', dr);
+
+        frag.appendChild(s);
+      }
+
+      el.classList.add('molecule');
+      el.appendChild(frag);
+    }
+
+    // Не делаем молекулы при reduced-motion (там и так без лишнего)
+    if (!prefersReduced) {
+      document.querySelectorAll('[data-molecule]').forEach(makeMolecule);
+    }
+
+    // ===== NEW: Particle burst =====
+    function burst(x, y, count=18){
+      if (prefersReduced) return;
+      for (let i=0; i<count; i++){
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = x + 'px';
+        p.style.top  = y + 'px';
+
+        // "формулы": иногда делаем не точку, а мини-символ
+        if (Math.random() < 0.35) {
+          p.style.width = 'auto';
+          p.style.height = 'auto';
+          p.style.padding = '2px 6px';
+          p.style.borderRadius = '999px';
+          p.style.fontSize = '11px';
+          p.style.lineHeight = '1';
+          p.style.background = 'rgba(255,255,255,.10)';
+          p.style.border = '1px solid rgba(255,255,255,.16)';
+          p.style.color = 'rgba(255,255,255,.86)';
+          p.style.boxShadow = '0 0 18px rgba(6,182,212,.18)';
+          const tokens = ['H', 'O', 'Na', 'Cl', 'Mg', 'Fe', 'CO₂', 'NH₃', 'S', 'K'];
+          p.textContent = tokens[(Math.random()*tokens.length)|0];
+        }
+
+        document.body.appendChild(p);
+
+        const a = Math.random() * Math.PI * 2;
+        const v = 40 + Math.random()*70;
+        const dx = Math.cos(a) * v;
+        const dy = Math.sin(a) * v;
+        const rot = (Math.random()*2 - 1) * 180;
+
+        const anim = p.animate([
+          { transform:`translate(0,0) scale(1) rotate(0deg)`, opacity:1 },
+          { transform:`translate(${dx}px,${dy}px) scale(0.65) rotate(${rot}deg)`, opacity:0 }
+        ], {
+          duration: 520 + Math.random()*260,
+          easing:'cubic-bezier(.2,.8,.2,1)'
+        });
+
+        anim.onfinish = () => p.remove();
+      }
+    }
+
+    // Вешаем бурст на логотип и бейджи
+    document.querySelectorAll('.badge, .logo').forEach(el => {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => {
+        const r = el.getBoundingClientRect();
+        burst(r.left + r.width/2, r.top + r.height/2, 22);
+      });
     });
   </script>
 </body>
