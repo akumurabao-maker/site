@@ -345,29 +345,37 @@
 
     /* ======== NEW: Molecule text effect ======== */
     .molecule{
-      display:inline-block;
-      position:relative;
-      cursor:default;
-      --spread: var(--mol-spread);
-    }
-    .molecule .ch{
-      display:inline-block;
-      white-space: pre;
-      will-change: transform, opacity, filter;
-      transition:
-        transform .45s cubic-bezier(.2,.8,.2,1),
-        opacity .45s ease,
-        filter .45s ease;
-    }
-    .molecule:hover .ch{
-      transform:
-        translate(calc(var(--dx) * var(--spread)),
-                  calc(var(--dy) * var(--spread)))
-        rotate(calc(var(--dr) * 22deg));
-      filter: blur(.4px);
-      opacity:.92;
-    }
+  display:inline;
+  cursor: default;
+  --spread: var(--mol-spread);
+}
 
+.molecule .w{
+  display:inline-block;
+  white-space: nowrap; /* запрет переносов внутри слова */
+}
+
+.molecule .sp{
+  display:inline; /* обычный пробел */
+}
+
+.molecule .ch{
+  display:inline-block;
+  will-change: transform, opacity, filter;
+  transition:
+    transform .45s cubic-bezier(.2,.8,.2,1),
+    opacity .45s ease,
+    filter .45s ease;
+}
+
+.molecule:hover .ch{
+  transform:
+    translate(calc(var(--dx) * var(--spread)),
+              calc(var(--dy) * var(--spread)))
+    rotate(calc(var(--dr) * 22deg));
+  filter: blur(.4px);
+  opacity:.92;
+}
     /* ======== NEW: Particle burst ======== */
     .particle{
       position: fixed;
@@ -735,25 +743,46 @@
 
   const text = el.textContent || '';
   el.innerHTML = '';
+  el.classList.add('molecule');
 
   const frag = document.createDocumentFragment();
-  for (const ch of text) {
-    const s = document.createElement('span');
-    s.className = 'ch';
-    s.textContent = ch === ' ' ? '\u00A0' : ch;
 
-    const dx = (Math.random() * 2 - 1).toFixed(3);
-    const dy = (Math.random() * 2 - 1).toFixed(3);
-    const dr = (Math.random() * 2 - 1).toFixed(3);
+  // Разбиваем на токены: слова и пробелы
+  const tokens = text.split(/(\s+)/);
 
-    s.style.setProperty('--dx', dx);
-    s.style.setProperty('--dy', dy);
-    s.style.setProperty('--dr', dr);
+  for (const tok of tokens) {
+    // если это пробел(ы) — оставляем как есть
+    if (/^\s+$/.test(tok)) {
+      const sp = document.createElement('span');
+      sp.className = 'sp';
+      sp.textContent = tok;
+      frag.appendChild(sp);
+      continue;
+    }
 
-    frag.appendChild(s);
+    // слово: делаем контейнер, чтобы переносы были только по словам
+    const w = document.createElement('span');
+    w.className = 'w';
+
+    for (const ch of tok) {
+      const s = document.createElement('span');
+      s.className = 'ch';
+      s.textContent = ch;
+
+      const dx = (Math.random() * 2 - 1).toFixed(3);
+      const dy = (Math.random() * 2 - 1).toFixed(3);
+      const dr = (Math.random() * 2 - 1).toFixed(3);
+
+      s.style.setProperty('--dx', dx);
+      s.style.setProperty('--dy', dy);
+      s.style.setProperty('--dr', dr);
+
+      w.appendChild(s);
+    }
+
+    frag.appendChild(w);
   }
 
-  el.classList.add('molecule');
   el.appendChild(frag);
 }
     // Не делаем молекулы при reduced-motion (там и так без лишнего)
@@ -817,5 +846,6 @@
   </script>
 </body>
 </html>
+
 
 
